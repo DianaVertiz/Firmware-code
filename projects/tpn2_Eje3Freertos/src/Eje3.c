@@ -1,0 +1,250 @@
+/* Copyright 2017, XXXX
+ *
+ *  * All rights reserved.
+ *
+ * This file is part of CIAA Firmware.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/** \brief Blinking Bare Metal example source file
+ **
+ ** This is a mini example of the CIAA Firmware.
+ **
+ **/
+
+/** \addtogroup CIAA_Firmware CIAA Firmware
+ ** @{ */
+
+/** \addtogroup Examples CIAA Firmware Examples
+ ** @{ */
+/** \addtogroup Baremetal Bare Metal example source file
+ ** @{ */
+
+/*
+ * Initials     Name
+ * ---------------------------
+ *
+ */
+
+/*
+ * modification history (new versions first)
+ * -----------------------------------------------------------
+ * yyyymmdd v0.0.1 initials initial version
+ */
+
+/*==================[inclusions]=============================================*/
+#include "Eje3.h"       /* <= own header */
+
+#include "task.h"
+
+/*==================[macros and definitions]=================================*/
+#define COUNT_DELAY 3000000
+#define xTicksBlue 1100
+#define delayTecla 250
+
+uint8_t FlagBlue = 1;
+uint8_t FlagRed = 1;
+uint8_t FlagYellow = 1;
+uint8_t FlagGreen = 1;
+uint8_t PressedTEC1 = 0;
+uint8_t PressedTEC2 = 0;
+uint8_t PressedTEC3 = 0;
+uint8_t PressedTEC4 = 0;
+TaskHandle_t tareaAzul;
+TaskHandle_t tareaRojo;
+TaskHandle_t tareaAmarillo;
+TaskHandle_t tareaVerde;
+
+typedef struct{
+	uint16_t delay;
+	uint8_t led;
+} blinking_t; /*No olvidar el ;*/
+
+
+
+
+/*==================[internal data declaration]==============================*/
+
+/*==================[internal functions declaration]=========================*/
+
+/*Elimino los lazos de delay*/
+
+
+/*==================[internal data definition]===============================*/
+
+/*==================[external data definition]===============================*/
+
+/*==================[internal functions definition]==========================*/
+
+/*==================[external functions definition]==========================*/
+/** \brief Main function
+ *
+ * This is the main entry point of the software.
+ *
+ * \returns 0
+ *
+ * \remarks This function never returns. Return value is only to avoid compiler
+ *          warnings or errors.
+ */
+
+
+
+/*Defino la tarea*/
+void Blinking(void * parametros){
+
+	blinking_t * valores = (blinking_t *)parametros;
+	while(1)
+	    {
+	    	Led_Toggle(valores->led);
+	    	vTaskDelay(valores->delay);
+		}
+
+}
+
+void Teclado(void * parametros){
+
+	static uint8_t anterior = 0;
+	uint8_t tecla;
+
+	while(1){
+
+
+	tecla= Read_Switches();
+	if(tecla!= anterior){
+
+
+		if(TEC1 == tecla){
+
+			if(FlagBlue){
+				FlagBlue=0;
+				Led_Off(RGB_B_LED);
+				PressedTEC1=1;
+				vTaskSuspend(tareaAzul);
+
+			}
+			else {
+				PressedTEC1=0;
+				FlagBlue=1;
+				vTaskResume(tareaAzul);
+
+			}
+		}
+
+		else if(TEC2 == Read_Switches()){
+
+			if(FlagRed){
+				FlagRed=0;
+				Led_Off(RED_LED);
+				PressedTEC2=1;
+				vTaskSuspend(tareaRojo);
+			}
+			else {
+				PressedTEC2=0;
+				FlagRed=1;
+				vTaskResume(tareaRojo);
+			}
+
+		}
+
+		else if(TEC3 == Read_Switches()){
+
+			if(FlagYellow){
+				FlagYellow=0;
+				Led_Off(YELLOW_LED);
+				PressedTEC3=1;
+				vTaskSuspend(tareaAmarillo);
+			}
+			else {
+				PressedTEC3=0;
+				FlagYellow=1;
+				vTaskResume(tareaAmarillo);
+			}
+
+		}
+
+		else if(TEC4 == Read_Switches()){
+
+			if(FlagGreen){
+				FlagGreen=0;
+				Led_Off(GREEN_LED);
+				PressedTEC4=1;
+				vTaskSuspend(tareaVerde);
+			}
+			else {
+				PressedTEC4=0;
+				FlagGreen=1;
+				vTaskResume(tareaVerde);
+			}
+
+		}
+
+		anterior = tecla;
+	}
+
+	vTaskDelay(delayTecla);
+	}
+}
+
+
+int main(void)
+{
+	/*Inicializaciones*/
+		Init_Leds();
+		Init_Switches();
+
+	/*const para que ocupe flash(rom) y no ram*/
+	static const blinking_t valores[] ={
+				{.delay = 1100, .led = RGB_B_LED},
+				{.delay = 200, .led = RED_LED},
+				{.delay =500, .led = YELLOW_LED},
+				{.delay = 800, .led = GREEN_LED}
+
+		};
+
+
+	xTaskCreate(Blinking, "Azul", configMINIMAL_STACK_SIZE, &valores[0], 1, &tareaAzul);
+	xTaskCreate(Blinking, "Rojo", configMINIMAL_STACK_SIZE, &valores[1], 1, &tareaRojo);
+	xTaskCreate(Blinking, "Amarillo", configMINIMAL_STACK_SIZE, &valores[2], 1, &tareaAmarillo);
+	xTaskCreate(Blinking, "Verde", configMINIMAL_STACK_SIZE, &valores[3], 1, &tareaVerde);
+	xTaskCreate(Teclado, "Teclado", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+
+	/*arranco el sistema operativo */
+    vTaskStartScheduler();
+
+    /*es un for infinito*/
+    for(;;);
+    
+	return 0;
+}
+
+/** @} doxygen end group definition */
+/** @} doxygen end group definition */
+/** @} doxygen end group definition */
+/*==================[end of file]============================================*/
+

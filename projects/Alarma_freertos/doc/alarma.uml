@@ -1,0 +1,150 @@
+@startuml
+actor usuario
+participant sensor
+participant teclado
+participant ingreso
+participant desarmar
+
+alt Clave Correcta
+
+    usuario -> sensor
+    note left: Tecla 4
+    activate sensor
+    sensor -> desarmar
+    deactivate sensor
+    activate desarmar
+    desarmar --> usuario: Alerta ingreso detectado 
+    note left
+        Prender led 
+        RGB en azul
+    end note
+
+    usuario -> teclado
+    note left: Tecla 1 a 3
+    activate teclado
+    teclado -> ingreso
+    deactivate teclado
+    activate ingreso
+    ingreso --> usuario: Confirmación tecla pulsada 
+    note left
+        Apagar led RGB 
+        por 100 ms
+    end note
+
+    usuario -> teclado
+    note left: Tecla 1 a 3
+    activate teclado
+    teclado -> ingreso
+    deactivate teclado
+    ingreso --> usuario: Confirmación tecla pulsada
+    note left
+        Apagar led RGB 
+        por 100 ms
+    end note
+
+    usuario -> teclado
+    note left: Tecla 1 a 3
+    activate teclado
+    teclado -> ingreso
+    deactivate teclado
+    ingreso --> usuario: Confirmación tecla pulsada
+    note left
+        Apagar led RGB 
+        por 100 ms
+    end note
+
+    ingreso -> desarmar
+
+    deactivate ingreso
+    desarmar --> usuario: Confirmacion desarmado
+    note left
+        Apagar led RGB 
+    end note
+
+    deactivate desarmar
+    ||5||
+end
+@enduml
+
+@startuml
+actor usuario
+participant sensor
+participant teclado
+participant ingreso
+participant desarmar
+
+alt Expira Tiempo de Ingreso
+    ||5||
+    usuario -> sensor
+    note left: Tecla 4
+    activate sensor
+    sensor -> desarmar
+    deactivate sensor
+    activate desarmar
+    ||10||
+    ... 30 segundos despues ...
+    desarmar --> usuario: Sonar alarma
+    note left: Prender led rojo
+
+    deactivate desarmar
+    ||5||
+else Clave Incorrecta
+    ||5||
+    usuario -> sensor
+    note left: Tecla 4
+    activate sensor
+    sensor -> desarmar
+    deactivate sensor
+    activate desarmar
+
+    loop 3 veces
+        ||5||
+        usuario -> teclado
+        note left: Tecla 1 a 3
+        activate teclado
+        teclado -> ingreso
+        deactivate teclado
+        activate ingreso
+        ingreso --> usuario: Confirmación tecla pulsada
+        note left
+            Apagar led RGB 
+            por 100 ms
+        end note
+
+        usuario -> teclado
+        note left: Tecla 1 a 3
+        activate teclado
+        teclado -> ingreso
+        deactivate teclado
+        ingreso --> usuario: Confirmación tecla pulsada
+        note left
+            Apagar led RGB 
+            por 100 ms
+        end note
+
+        usuario -> teclado
+        note left: Tecla 1 a 3
+        activate teclado
+        teclado -> ingreso
+        deactivate teclado
+        ingreso --> usuario: Confirmación tecla pulsada
+        note left
+            Apagar led RGB 
+            por 100 ms
+        end note
+
+        ingreso -> desarmar
+        desarmar --> usuario: Error en la clave
+        note left
+            Cambiar led RGB
+            a rojo por 1000 ms
+        end note
+    deactivate ingreso
+    end
+    desarmar --> usuario: Sonar alarma
+    note left: Prender led rojo
+    deactivate desarmar
+    ||5||
+end
+
+@enduml
